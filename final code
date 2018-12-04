@@ -1,0 +1,137 @@
+/***********************************************************************************************
+	File Name:	Solar Auto Irrigation
+	Author:		Farid Rezazada
+	Date:		  Nov 11, 2018 
+	Modified:	Name or None
+	© Fanshawe College, 2018
+
+***********************************************************************************************/
+
+#include <reg52.h> //importing generic header files for 8951
+
+sbit sensor = P1 ^ 0;    //port 1 pin 0 dedicated to moisture sensor
+
+sbit motor = P3 ^ 0;     //port 3 pin 0 dedicated to motor
+
+sbit RS = p3 ^ 7;       //reg select port 3 pin 7
+sbit RW = P3 ^ 6;		//read/write port 3 pin 6
+sbit EN = P3 ^ 5;		//enable set to port 3 pin 5
+
+#define lcd_port2 		//port 2 dedicated to LCD operation
+
+void lcd_init();		//global functions
+void lcd_cmd(unsigned char);
+void lcd_data(unsigned char);
+void lcd_string(unsigned char*);
+void delay(unsigned int);
+
+			// Function Header
+/*** functionName: *****************************************************************
+Author:		Farid Rezazada
+Date:		  Nov 11, 2018
+Modified:	  Name or None
+Desc:		  Main body of code, turns on/off motor, displays information to LCD based on sensor reading
+**********************************************************************************/
+
+void main()
+{
+	
+	sensor = 1;    //This will set the sensor pin to high
+	motor = 0;		 //This will clear the motor pin
+	lcd_init();		 //This will initialize the LCD
+	
+	while(1)
+	{
+		if(sensor == 1)   //If the input is high
+		{	
+			lcd_cmd (0x80);                //This is the first line of LCD Panel 
+			lcd_string (" WET CONDITION"); //Display sensor reading
+			lcd_cmd (0xc0);                //This is the 2nd line of LCD Panel
+			lcd_string ("MOTOR OFF");      //Display state of the motor
+			motor = 1;
+		}
+		elseif (sensor == 0)
+		{
+			lcd_cmd (0x80);                //This is the first line of LCD Panel
+			lcd_string ("DRY CONDITION");  //Display sensor reading
+			lcd_cmd (0xc0);						     //This is the 2nd line of LCD Panel
+			lcd_string ("MOTOR ON");       //Display state of the motor
+			motor = 1;                     //Relay will turn ON
+		}
+	}			
+}
+//eo main
+
+			// Function Header
+/*** functionName: *****************************************************************
+Author:		Farid Rezazada
+Date:		Nov 11, 2018
+Modified:	Name or None
+Desc:		This function initializes the LCD
+**********************************************************************************/
+
+void lcd_init()
+{
+	lcd_cmd (0x38);       //Set the LCD to 5*7 Matric mode
+	lcd_cmd (0x0c);				//Display cursor ON/OFF
+	lcd_cmd (0x01);				//Clears the LCD screen
+	lcd_cmd (0x80);				//Back to LCD starting line/position
+}
+
+//eo lcd_init
+
+			// Function Header
+/*** functionName: *****************************************************************
+Author:		Farid Rezazada
+Date:		Nov 11, 2018
+Modified:	Name or None
+Desc:		This function sends commands to the LCD
+**********************************************************************************/
+
+void lcd_cmd (unsigned char cmd)
+{
+	lcd_port = cmd;
+	RS = 1;								//1 for Data
+	RW = 0;								//0 for Writing
+	EN = 0;								//Enable set to low
+	EN = 1;								//Enable set to high
+}
+
+//eo lcd_cmd	
+
+// Function Header
+/*** functionName: *****************************************************************
+Author:		Farid Rezazada
+Date:		Nov 11, 2018
+Modified:	Name or None
+Desc:		This function reads and writes data to LCD
+**********************************************************************************/
+
+void lcd_data (unsigned char data1)
+{
+	lcd_port = data1;
+	RS = 1;								//1 for Data
+	RW = 1;								//1 for Reading
+	EN = 0;
+	EN = 1;
+}
+
+//eo lcd_data
+
+			// Function Header
+/*** functionName: *****************************************************************
+Author:		Farid Rezazada
+Date:		Nov 11, 2018
+Modified:	Name or None
+Desc:		This function sends characters to LCD until NULL is reached	
+**********************************************************************************/
+
+void lcd_string (unsigned char *t)
+{
+	while(*t) 		//until string has ended
+	{
+		lcd_data(*t);
+		t++  		//sends characters to LCD one by one
+	}
+
+//eo lcd_string		
